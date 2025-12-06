@@ -168,7 +168,7 @@ p_combined <- ggplot(combined_data,
       shape = guide_legend(order = 2)
     )
 
-ggsave("./../figures/data_combined.pdf",
+ggsave("./../figures/figure2_barplots.pdf",
        p_combined, width = 6, height = 3)
 
 ############### Execution probabilities ###############
