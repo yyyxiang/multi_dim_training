@@ -108,7 +108,7 @@ plot_probability_by_competence_setup <- function(plotting_structure) {
       legend.box.margin = margin(t = -8))
   
   # save plot
-  ggsave(filename = paste0("./../figures/supplement/comparison_s", plotting_structure, ".pdf"),
+  ggsave(filename = paste0("./../figures/supplement/comparison_competence_setup", plotting_structure, ".pdf"),
          plot = plot_training, width = 3, height = 4.5, onefile = TRUE)
   
 }
