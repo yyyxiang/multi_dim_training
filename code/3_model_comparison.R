@@ -70,6 +70,6 @@ best_model_exec <- summarize_best(execution_log_likelihood, model_levels)
 p4 <- plot_model_share(best_model_exec, model_levels, model_palette)
 
 # Figure 3
-pdf('./../figures/model_comparison.pdf', onefile = T, width = 12, height = 6)
+pdf('./../figures/figure3_model_comparison.pdf', onefile = T, width = 12, height = 6)
 (p1 | p3) / (p2 | p4) + plot_annotation(tag_levels = 'A')
 dev.off()
