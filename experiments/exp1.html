@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title> Train your defense teams! </title>
+    <script src="jspsych/dist/jspsych.js"></script>
+    <script src="jspsych/dist/plugin-browser-check.js"></script>
+    <script src="jspsych/dist/plugin-external-html.js"></script>
+    <script src="jspsych/dist/plugin-fullscreen.js"></script>
+    <script src="jspsych/dist/plugin-survey.js"></script>
+    <script src="jspsych/dist/plugin-survey-multi-choice.js"></script>
+    <script src="jspsych/dist/plugin-instructions.js"></script>
+    <script src="jspsych/dist/plugin-call-function.js"></script>
+    <script src="jspsych/dist/plugin-html-keyboard-response.js"></script>
+    <script src="jspsych/dist/plugin-html-button-response.js"></script>
+    <script src="jspsych/dist/plugin-preload.js"></script>
+    <script src="jspsych/dist/plugin-survey-likert.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
+    <link href="jspsych/dist/jspsych.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://unpkg.com/@jspsych/plugin-survey@0.2.2/css/survey.css">
+    <style>
+        .row { display: flex; }
+        .column { flex: 50%; }
+    </style>
+  </head>
+  <body></body>
+  <script>
+
+  	const jsPsych = initJsPsych();
+
+  	var timeline = [];
+    var stim_img = [
+  'img/redteam.png',
+  'img/blueteam.png',
+  'img/strength.png',
+  'img/landattack.png',
+  'img/airattack.png',
+  'img/failedblue.png',
+  'img/failedred.png',
+  'img/faileddefault.png',
+  'img/defaultteam.png',
+  'img/white.png'
+];
+
+
+    // setup
+    var pre_shuffle = [
+        { competence_structure: 1, scenario: 1, Xa: 10, Xb: 15, Ya: 2, Yb: 5 },
+        { competence_structure: 1, scenario: 2, Xa: 15, Xb: 20, Ya: 2, Yb: 5 },
+        { competence_structure: 1, scenario: 3, Xa: 15, Xb: 20, Ya: 5, Yb: 6 },
+
+        { competence_structure: 2, scenario: 1, Xa: 2, Xb: 10, Ya: 2, Yb: 2 },
+        { competence_structure: 2, scenario: 2, Xa: 2, Xb: 15, Ya: 2, Yb: 2 },
+        { competence_structure: 2, scenario: 3, Xa: 5, Xb: 15, Ya: 5, Yb: 5 },
+
+        { competence_structure: 3, scenario: 1, Xa: 10, Xb: 5, Ya: 2, Yb: 15 },
+        { competence_structure: 3, scenario: 2, Xa: 5, Xb: 5, Ya: 2, Yb: 20 },
+        { competence_structure: 3, scenario: 3, Xa: 5, Xb: 10, Ya: 2, Yb: 20 }
+      ];
+
+        // Apply random flipping
+        var pre_shuffle = pre_shuffle.map(trial => {
+            const flip = Math.random() < 0.5;
+            return flip
+                ? {
+                    ...trial,
+                    Xa: trial.Ya,
+                    Xb: trial.Yb,
+                    Ya: trial.Xa,
+                    Yb: trial.Xb,
+                    flip: true
+                }
+                : {
+                    ...trial,
+                    flip: false
+                };
+        });
+
+      var all_trials = jsPsych.randomization.repeat(pre_shuffle, 1);
+      
+      var all_trials = all_trials.map((item, index) => ({
+        id: index + 1,
+        ...item
+      }));
+
+        var training_boxes = [2, 10]
+        var total_training_rounds = 3
+
+        var subjectId =  jsPsych.randomization.randomID(12);
+        var url = window.location.href;
+        var mturkId = jsPsych.data.getURLVariable('workerId');
+        // let turkInfo = jsPsych.turk.turkInfo();
+        var expIndex = 'exp1';
+        var comp_code = 'SAajen29r8cjd';
+        jsPsych.data.addProperties({subjectId, url, mturkId, expIndex, all_trials});
+
+    // helping functions
+        // 1. update strength
+        function update_strength(trial, round) {
+  return {
+    type: jsPsychSurveyMultiChoice,
+    preamble: function () {
+      return `<p style='font-size:25px'><b>Mission ${trial.id}, Training Round ${round}/${total_training_rounds}</b></p>
+              <p style='text-align: center;'><b>Current Competencies:</b><br>
+              <div class="row">
+            <div class="column" style="float: left;">
+            <u>Red Team</u>
+            <br><img src='img/redteam.png' height='60' style='margin-left:10px; vertical-align: middle;'></img>
+            <br><br> <img src='img/landattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Land: ${Math.round(trial.Xa * 100) / 100}
+      <br><br> <img src='img/airattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Air: ${Math.round(trial.Xb * 100) / 100}
+            </div>
+
+            <div class="column" style="float: left;"><img src='img/white.png' width='20'></img></div>
+
+            <div class="column" style="float: left;">
+            <u> Training Difficulties </u>
+            <br><br><img src='img/strength.png' height='20' style='vertical-align:middle;'></img>
+            <br> Difficulty: 2
+            <br><br><img src='img/strength.png' height='40' style='vertical-align:middle;'></img>
+            <br> Difficulty: 10
+            </div>
+
+            <div class="column" style="float: left;"><img src='img/white.png' width='20'></img></div>
+
+            <div class="column" style="float: right;">
+            <u>Blue Team</u>
+            <br><img src='img/blueteam.png' height='60' style='margin-left:10px; vertical-align: middle;'></img>
+            <br><br> <img src='img/landattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Land: ${Math.round(trial.Ya * 100) / 100}
+      <br><br> <img src='img/airattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Air: ${Math.round(trial.Yb * 100) / 100}
+            </div>
+      </div><br>`
+    },
+    questions: [
+      {
+        prompt: "Which team do you want to train?",
+        name: "agent",
+        options: [
+          // "None",
+          "Red Team <img src='img/redteam.png' height='30' style='vertical-align:middle;'>",
+          "Blue Team <img src='img/blueteam.png' height='30' style='vertical-align:middle;'>"
+        ],
+        required: true,
+        horizontal: true
+      },
+      {
+        prompt: "Which defense skill do you want to train them on?",
+        name: "dimension",
+        options: [
+          // "None",
+          "Land <img src='img/landattack.png' height='30' style='vertical-align:middle;'>",
+          "Air <img src='img/airattack.png' height='30' style='vertical-align:middle;'>"
+        ],
+        required: true,
+        horizontal: true
+      },
+      {
+        prompt: "What training difficulty do you want to use?",
+        name: "weight",
+        options: [
+          // "None",
+          "2 <img src='img/strength.png' height='20' style='vertical-align:middle;'>",
+          "10 <img src='img/strength.png' height='40' style='vertical-align:middle;'>"
+        ],
+        required: true,
+        horizontal: true
+      }
+    ],
+    on_finish: function (data) {
+      const map_agent = { "Red Team": "X", "Blue Team": "Y" };
+      const map_dim = { "Land": "a", "Air": "b" };
+
+      const raw = data.response;
+      const extractLabel = str => str.replace(/<[^>]*>/g, '').trim(); // strip image HTML
+
+      const agent = map_agent[extractLabel(raw.agent)];
+      const dim = map_dim[extractLabel(raw.dimension)];
+      const weight = parseInt(extractLabel(raw.weight));
+
+      let success = false;
+      let prev_value = null;
+      let new_value = null;
+
+      // if (!agent || !dim || isNaN(weight)) {
+      //   jsPsych.data.addDataToLastTrial({
+      //     agent: agent || "None",
+      //     dimension: dim || "None",
+      //     weight_selected: weight || 0,
+      //     success: false
+      //   });
+      //   return;
+      // }
+
+      const key = agent + dim;
+      prev_value = trial[key];
+
+      if (prev_value >= weight) {
+        const increment = Math.round((weight / prev_value) * 100) / 100;
+        new_value = Math.round((prev_value + increment) * 100) / 100;
+        trial[key] = new_value;
+        success = true;
+      } else {
+        new_value = prev_value;
+        success = false;
+      }
+
+      jsPsych.data.addDataToLastTrial({
+        trial_id: trial.id,
+        competence_structure: trial.competence_structure,
+        scenario: trial.scenario,
+        round: round,
+        agent: agent,
+        dimension: dim,
+        weight_selected: weight,
+        previous_value: prev_value,
+        new_value: new_value,
+        success: success,
+        Xa: trial.Xa,
+        Xb: trial.Xb,
+        Ya: trial.Ya,
+        Yb: trial.Yb,
+        flip: trial.flip
+      });
+    }
+  };
+}
+
+// 2: individual outcome
+function show_ind_outcome(trial, round) {
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+      const last = jsPsych.data.getLastTrialData().values()[0];
+      const agent = last.agent;
+      const dim = last.dimension;
+      const weight = last.weight_selected;
+      const success = last.success;
+      const prev = last.previous_value;
+      const curr = last.new_value;
+
+      // Label and image mappings
+      const agentLabel = agent === "X" ? "Red Team" : "Blue Team";
+      const agentImg = agent === "X" ? "img/redteam.png" : "img/blueteam.png";
+      const dimLabel = dim === "a" ? "Land Defense" : "Air Defense";
+      const dimImg = dim === "a" ? "img/landattack.png" : "img/airattack.png";
+      const strengthImg = weight === 2
+        ? "<img src='img/strength.png' height='20'>"
+        : "<img src='img/strength.png' height='40'>";
+
+      const header = `<p style='font-size:25px'><b>Mission ${trial.id}, Training Round ${round}/${total_training_rounds}</b></p>`;
+
+      const summary = success
+        ? `<p style='color:green;'>&#9989; <strong>The team successfully completed the training!</strong></p>
+           <p><strong>${agentLabel} - ${dimLabel}</strong> increased from ${prev} to ${curr}.</p>`
+        : `<p style='color:red;'>&#10060; <strong>The team failed</strong> to complete the training. No competence gained.</p>
+           <p><strong>${agentLabel} - ${dimLabel}</strong> remains at ${prev}.</p>`;
+
+      const desc = `<p>You trained <strong>${agentLabel}</strong> on <strong>${dimLabel}</strong> using a <strong>difficulty of ${weight}</strong>.</p>`;
+
+      return `${header}${desc}${summary}`;
+    },
+    choices: ["Continue"],
+    on_finish: function () {
+      if (round === total_training_rounds) {
+        const this_trial_data = jsPsych.data.get().filter({ trial_id: trial.id });
+        const total_weight = this_trial_data.select('weight_selected').sum();
+        jsPsych.data.addDataToLastTrial({
+          total_training_weight: total_weight,
+          Xa: trial.Xa,
+          Xb: trial.Xb,
+          Ya: trial.Ya,
+          Yb: trial.Yb,
+          flip: trial.flip
+        });
+      }
+    }
+  };
+}
+
+        // 3. landing 
+        function landing(trial) {
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <p style='font-size:30px'><b>Mission ${trial.id}</b></p>
+      <p>Train the teams over three rounds, then assign one to land attack and one to air attack.
+      <br> Remember that your goal is to <b>maximize total defense after training!</b></p>
+      <p style='text-align: center;'><b>Starting Competencies:</b><br>
+      <div class="row">
+            <div class="column" style="float: left;">
+            <u>Red Team</u>
+            <br><img src='img/redteam.png' height='60' style='margin-left:10px; vertical-align: middle;'></img>
+            <br><br> <img src='img/landattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Land: ${trial.Xa}
+      <br><br> <img src='img/airattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Air: ${trial.Xb}
+            </div>
+
+            <div class="column" style="float: left;"><img src='img/white.png' width='20'></img></div>
+
+            <div class="column" style="float: left;">
+            <u> Training Difficulties </u>
+            <br><br><img src='img/strength.png' height='20' style='vertical-align:middle;'></img>
+            <br> Difficulty: 2
+            <br><br><img src='img/strength.png' height='40' style='vertical-align:middle;'></img>
+            <br> Difficulty: 10
+            </div>
+
+            <div class="column" style="float: left;"><img src='img/white.png' width='20'></img></div>
+
+            <div class="column" style="float: right;">
+            <u>Blue Team</u>
+            <br><img src='img/blueteam.png' height='60' style='margin-left:10px; vertical-align: middle;'></img>
+            <br><br> <img src='img/landattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Land: ${trial.Ya}
+      <br><br> <img src='img/airattack.png' height='40' style='margin-right:5px; vertical-align:middle;'></img> Air: ${trial.Yb}
+            </div>
+      </div><br>
+    `,
+    choices: ["Start Training"],
+    on_finish: function(data) {
+      jsPsych.data.addDataToLastTrial({
+        trial_id: trial.id,
+        competence_structure: trial.competence_structure,
+        scenario: trial.scenario,
+        round: 0,
+        Xa: trial.Xa,
+        Xb: trial.Xb,
+        Ya: trial.Ya,
+        Yb: trial.Yb,
+        flip: trial.flip
+      });
+    }
+  };
+}
+
+        // 4. execution phase (selecting who to perform tasks)
+        function execution_phase(trial) {
+  return {
+    type: jsPsychSurveyMultiChoice,
+    preamble: function() {
+      const last = jsPsych.data.get().last(1).values()[0];
+      return `
+      <p style='font-size: 25px; text-align: center;'><b>Mission ${trial.id}: Execution Phase</b></p>
+<p style='text-align: center;'>Assign a team to defend against the <b>Land</b> attack and a team to defend against the <b>Air</b> attack.</p>
+<p style='text-align: center;'>Remember, because the attacks occur at different times, you may assign the same team to both defenses if you wish.</p>      
+<hr>
+      <p style='text-align: center;'><b>Current Competencies:</b><br>
+      <div class="row">
+            <div class="column" style="float: left;">
+            <u>Red Team</u>
+            <br><img src='img/redteam.png' height='30' style='margin-left:10px; vertical-align: middle;'></img>
+            <br> Land <img src='img/landattack.png' height='20' style='margin-right:5px; vertical-align:middle;'></img>: ${last.Xa}
+      <br> Air <img src='img/airattack.png' height='20' style='margin-right:5px; vertical-align:middle;'></img>: ${last.Xb}
+            </div>
+
+            <div class="column" style="float: left;"><img src='img/white.png' width='40'></img></div>
+
+            <div class="column" style="float: right;">
+            <u>Blue Team</u>
+            <br><img src='img/blueteam.png' height='30' style='margin-left:10px; vertical-align: middle;'></img>
+            <br> Land <img src='img/landattack.png' height='20' style='margin-right:5px; vertical-align:middle;'></img>: ${last.Ya}
+      <br> Air <img src='img/airattack.png' height='20' style='margin-right:5px; vertical-align:middle;'></img>: ${last.Yb}
+            </div>
+      </div>`
+    },
+      questions: [
+  {
+    prompt: "Who should handle <b>Land Defense</b>?",
+    name: "assign_dim_a",
+    options: [
+      "Red Team <img src='img/redteam.png' height='30' style='vertical-align:middle;'>",
+      "Blue Team <img src='img/blueteam.png' height='30' style='vertical-align:middle;'>"
+    ],
+    required: true,
+    horizontal: true
+  },
+  {
+    prompt: "Who should handle <b>Air Defense</b>?",
+    name: "assign_dim_b",
+    options: [
+      "Red Team <img src='img/redteam.png' height='30' style='vertical-align:middle;'>",
+      "Blue Team <img src='img/blueteam.png' height='30' style='vertical-align:middle;'>"
+    ],
+    required: true,
+    horizontal: true
+  }
+],
+
+    on_finish: function (data) {
+      const extract = str => str.replace(/<[^>]*>/g, '').trim(); // strip HTML
+      const response = data.response;
+
+      const a_agent = extract(response.assign_dim_a) === "Red Team" ? "X" : "Y";
+      const b_agent = extract(response.assign_dim_b) === "Red Team" ? "X" : "Y";
+ 
+      let lift_a = a_agent === "X" ? trial.Xa : trial.Ya;
+      let lift_b = b_agent === "X" ? trial.Xb : trial.Yb;
+      let performance_score = lift_a + lift_b;
+      let valid_assignment = true; // Always valid in Structure 1
+
+      const trial_data = jsPsych.data.get().filter({ trial_id: trial.id });
+      const total_weight = trial_data.select('weight_selected').sum();
+      const bonus = valid_assignment ? Math.round((performance_score / 50) * 100) / 100 : 0;
+
+      jsPsych.data.addDataToLastTrial({
+        trial_id: trial.id,
+        assign_dim_a: a_agent,
+        assign_dim_b: b_agent,
+        lift_a: lift_a,
+        lift_b: lift_b,
+        performance_score: performance_score,
+        competence_structure_bonus: bonus,
+        invalid_assignment: !valid_assignment,
+        flip: trial.flip
+      });
+    }
+  };
+}
+        // 5. Show summary
+        function show_trial_summary(trial) {
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function () {
+      const last = jsPsych.data.get().last(1).values()[0];
+      const teamName = agent => agent === "X" ? "Red Team" : "Blue Team";
+      const teamImage = agent => agent === "X" ? "img/redteam.png" : "img/blueteam.png";
+
+      if (last.invalid_assignment) {
+        return `
+          <p style='font-size:25px'><b>Mission ${trial.id} Summary</b></p>
+          <p style='color:red; font-weight: bold;'>&#10060; Invalid assignment: You assigned the same team to both tasks.</p>
+          <p>Each team must be assigned to a different task. As a result, your total defense for this mission is 0.</p>
+          <div style='margin-top:20px;'>
+            <img src='img/failedred.png' height='60' style='margin-right:30px;'>
+            <img src='img/failedblue.png' height='60'>
+          </div>`;
+      }
+
+      const assignLandImg = teamImage(last.assign_dim_a);
+      const assignAirImg = teamImage(last.assign_dim_b);
+
+      return `
+        <p style='font-size:25px'><b>Mission ${trial.id} Summary</b></p>
+        <p>You assigned:</p>
+
+        <div style='text-align:center; font-size: 16px; margin-bottom: 20px;'>
+          ${teamName(last.assign_dim_a)} to Land Defense (competence = ${last.lift_a})
+        </div>
+        <div style='display:flex; justify-content:center; align-items:center; margin-bottom:5px;'>
+          <img src='${assignLandImg}' height='40' style='margin-right:8px;'>
+          <span style='font-size: 24px;'> --> </span>
+          <img src='img/landattack.png' height='35' style='margin-left:8px;'>
+        </div>
+        
+        <div style='text-align:center; font-size: 16px; margin-bottom: 20px;'>
+          ${teamName(last.assign_dim_b)} to Air Defense (competence = ${last.lift_b})
+        </div>
+        <div style='display:flex; justify-content:center; align-items:center; margin-bottom:5px;'>
+          <img src='${assignAirImg}' height='40' style='margin-right:8px;'>
+          <span style='font-size: 24px;'> --> </span>
+          <img src='img/airattack.png' height='35' style='margin-left:8px;'>
+        </div>
+        
+        <p><b>Total defense:</b> ${Math.round(last.performance_score * 100)/100}</p>`;
+    },
+    choices: ["Continue"]
+  };
+}
+
+        // 6. examples
+        var example_trials = [
+        { dimension: "a", strength: 10, weight: 10 },  // success
+        { dimension: "b", strength: 10, weight: 2 },  // success
+        { dimension: "b", strength: 6, weight: 10 }   // fail
+        ];
+
+        function examplePage(idx) {
+  const ex = example_trials[idx - 1];
+  const { agent, dimension, strength, weight } = ex;
+  const effort = weight / strength;
+  const success = weight <= strength;
+  const gain = success ? Math.round(effort * 100) / 100 : 0;
+  const new_strength = Math.round((strength + gain) * 100) / 100;
+
+  const dimLabel = dimension === "a" ? "Land Defense" : "Air Defense";
+
+  const header = `<p style='font-size:25px'><b>Example ${idx}/${example_trials.length}</b></p>
+                  <p>Suppose you are training a team on ${dimLabel}.</p>
+                  <p><b>Competence:</b> ${strength} &nbsp;&nbsp; | &nbsp;&nbsp; <b>Training Difficulty:</b> ${weight}</p>
+                  <div style='margin: 10px 0 0 0;'>
+                    <img src='${stim_img[2]}' height='50' style='display:block; margin: 0 auto;'>
+                  </div>`;
+
+  const result = success
+    ? `<p style='color:green; margin-top: 10px;'>&#9989; The team successfully completes the training round!</p>
+       <p><b>Effort exerted:</b> ${Math.round(effort * 100)}% --> <b>Competence gain:</b> ${gain}</p>
+       <p><b>New competence in ${dimLabel}:</b> ${new_strength}</p>
+       <img src='${stim_img[8]}' height='60' style='margin-top:10px;'>`
+    : `<p style='color:red; margin-top: 10px;'>&#10060; <b>The team fails</b> to complete the training. No competence gained.</p>
+       <p><b>Competence in ${dimLabel} remains:</b> ${strength}</p>
+       <img src='${stim_img[7]}' height='60' style='margin-top:10px;'>`;
+
+  return `${header}${result}`;
+}
+
+        var show_examples = {
+        type: jsPsychInstructions,
+        pages: [examplePage(1), examplePage(2), examplePage(3)],
+        show_clickable_nav: true,
+        allow_backward: true
+        };
+
+// instrunctions
+    var instructions = {
+      type: jsPsychInstructions,
+pages: [
+  // Page 1: 
+  "<p style='font-size: 30px'><b>Mission Briefing</b></p>" +
+    "<p>You are the commander of a national defense unit preparing for an imminent threat.</p>" +
+    "<p>Two teams of soldiers—<b>Red Team</b> and <b>Blue Team</b>—will defend the country against <b>two types of attacks</b>: <b>land-based</b> and <b>air-based</b>.</p>" +
+    `<div style='margin: 10px 0;'>
+      <img src='${stim_img[0]}' height='100' style='margin-right:50px;'>
+      <img src='${stim_img[1]}' height='100'>
+    </div>` +
+    "<p>Each team has unique strengths in both <b>Land Defense</b> and <b>Air Defense</b>.</p>" +
+    `<div style='margin: 10px 0;'>
+      <img src='${stim_img[3]}' height='70' style='margin-right:50px;'>
+      <img src='${stim_img[4]}' height='70'>
+    </div>` +
+    "<p>Your task is to train the teams and assign them to face attacks in order to defend your nation.</p>",
+
+    // Page 2: 
+    "<p>You will oversee a few missions. In each mission, your job is to <b>train the teams over 3 rounds</b> to improve their defense abilities.</p>" +
+    "<p> In each round, you will make three decisions: </p>" +
+    "<p><b>1. Which team to train</b> (Red or Blue)</p>" +
+`<div style='margin-bottom: 15px;'>
+  <img src='${stim_img[0]}' height='60' style='margin-right:30px;'>
+  <img src='${stim_img[1]}' height='60'>
+</div>` +
+
+"<p><b>2. Which defense skill</b> to train that team on (Land or Air)</p>" +
+`<div style='margin-bottom: 15px;'>
+  <img src='${stim_img[3]}' height='50' style='margin-right:30px;'>
+  <img src='${stim_img[4]}' height='50'>
+</div>` +
+
+"<p><b>3. Which training difficulty</b> to use (difficulty level 2 or 10)</p>" +
+`<div style='display: flex; justify-content: center; gap: 80px; align-items: center; margin-bottom: 15px;'>
+  <div style='text-align: center;'>
+    <img src='${stim_img[2]}' height='40'><br>
+    <span style='display: inline-block; margin-top: 5px;'>Difficulty = 2</span>
+  </div>
+  <div style='text-align: center;'>
+    <img src='${stim_img[2]}' height='70'><br>
+    <span style='display: inline-block; margin-top: 5px;'>Difficulty = 10</span>
+  </div>
+</div>`,
+
+    // Page 3: 
+    "<p><b><u>Training Rule:</u> Competence increases by the amount of effort exerted</b>.</p>" +
+    "<p>For example, if a team has land competence 4 and completes a drill of difficulty 2, the effort exerted is 50%, so the team's land competence increases by 0.50.</p>" +
+    "<p>If a team has air competence 2 and completes a drill of difficulty 2, the exerted effort is 100%, so the air competence increases by 1." +
+    `<div style='margin: 10px 0;'>
+      <p>&#9989; Successful Training</p>
+      <img src='${stim_img[8]}' height='80'>
+    </div>` +
+    "<p> However, a team can only complete a training if the difficulty does not exceed competence. <p>" +
+    "<p> If the drill is too difficult (difficulty > corresponding competence), the team will not exert effort and will not gain competence.</p>" +
+    `<div style='margin: 10px 0;'>
+      <p>&#10060; Failed Training</p>
+      <img src='${stim_img[7]}' height='80'>
+    </div>`,
+
+    // Page 4
+    "<p>After training, you will assign teams to defend against two types of attacks: <b>Land</b> and <b>Air</b>.</p>" +
+"<p>Because the attacks occur <b>at different times</b>, you may assign the <b>same team to both tasks</b> if you believe they are better equipped.</p>"+
+    
+`<div style='display: flex; justify-content: center; gap: 100px; margin: 30px 0; text-align: center;'>
+
+  <div>
+    <p><b>Possible Assignment 1</b></p>
+    <p>Blue to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Red to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  </div>
+
+  <div>
+    <p><b>Possible Assignment 2</b></p>
+    <p>Red to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Blue to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  </div>
+
+  <div>
+    <p><b>Possible Assignment 3</b></p>
+    <p>Red to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Red to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  </div>
+
+  <div>
+    <p><b>Possible Assignment 4</b></p>
+    <p>Blue to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Blue to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  </div>
+
+</div>`+
+  `<div style='margin: 15px 0;'>
+  <b style='color:red;'> </b>
+</div>`,
+  
+  // Page 5
+  `<p>Your goal is to <b>maximize total defense strength</b>, which is the total competence applied to the defense <b>after training</b>. This means: </p>` +
+  `<div style='display: flex; justify-content: center; gap: 100px; margin: 30px 0; text-align: center;'>
+
+
+    <div>
+    <p><b>Possible Assignment 1</b></p>
+    <p>Blue to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Red to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  <br> <u>Total defense strength:</u> <br><b>Blue air competence + Red land competence</b>
+  </div>
+
+
+  <div>
+    <p><b>Possible Assignment 2</b></p>
+    <p>Red to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Blue to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  <br> <u>Total defense strength:</u> <br><b>Red air competence + Blue land competence</b>
+  </div>
+
+    <div>
+    <p><b>Possible Assignment 3</b></p>
+    <p>Red to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Red to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[0]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  <br> <u>Total defense strength:</u> <br><b>Red air competence + Red land competence</b>
+  </div>
+
+    <div>
+    <p><b>Possible Assignment 4</b></p>
+    <p>Blue to Air</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[4]}' height='40'>
+    </div>
+    <p style='margin-top: 20px;'>Blue to Land</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 10px;'>
+      <img src='${stim_img[1]}' height='50'>
+      <span style='font-size: 24px;'> --> </span>
+      <img src='${stim_img[3]}' height='40'>
+    </div>
+  <br> <u>Total defense strength:</u> <br><b>Blue air competence + Blue land competence</b>
+  </div>
+
+</div>` +
+  `<p> &#128176; Your <b>bonus depends on the total defense strength.</b></p>
+  <p> The higher the total defense, the higher your bonus, up to $3.<p>`,
+
+  // Page 6
+  "<p>If you understand the rules, please click <i>'Next'</i> to go to the comprehension check.</p>" + 
+  "<p>Otherwise, click <i>'Previous'</i> to view the instructions again.</p><p>You must answer the comprehension questions correctly to proceed.</p>"
+    ],
+    show_clickable_nav: true
+    };
+
+    var gap = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: " ",
+        choices: 'NO_KEYS',
+        trial_duration: 1000
+    };
+
+    function between_round_gap(round) {
+    	return {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<p style='font-size: 22px'> Round " + round + "/" + num_rounds + "</p>",
+        choices: 'NO_KEYS',
+        trial_duration: 2000
+    	};
+    }
+
+    // comprehension check
+    var failed_comprehension_questions = true;
+        let comprehension_questions = {
+            type: jsPsychSurveyMultiChoice,
+            preamble: `<br> Comprehension questions:`,
+            questions: [
+        {
+        prompt: "<b>1. What is the goal of the game? </b>",
+        options: [
+            "Train teams soldiers so they are each strong enough to each handle both land and air attacks.",
+            "Train teams so that you can assign them to land and air defense in any way you choose, and their combined defense determines success.",
+            "The mission objective is not clearly defined."
+        ],
+        required: true
+        },
+        {
+        prompt: "<b>2. Which of these is true about training? </b>",
+        options: [
+            "In each round, I can train both teams at the same time, on both defense skills.",
+            "In each round, I can train one team at a time, but on both defense skills.",
+            "In each round, I can train one team at a time, only on one defense skill."
+        ],
+        required: true
+        },
+        {
+        prompt: "<b>3. How much effort does a team exert when training? </b>",
+        options: [
+            "Always exert 100% effort, regardless of the difficulty.",
+            "Exert 100% effort if the training is too simple, and 0% if it's too hard.",
+            "Exert as much effort as needed to complete the training, and 0% if it's too hard."
+        ],
+        required: true
+        },
+        {
+        prompt: "<b>4. How does a team's competence change after each round of training? </b>",
+        options: [
+            "Both defense skills will increase by the training difficulty given to them.",
+            "Both defense skills will increase by the effort exerted.",
+            "Only the defense skill being trained will increase by the effort exerted."
+        ],
+        required: true
+        },
+        {
+        prompt: "<b>5. After training, how can teams be assigned to the attacks? </b>",
+        options: [
+            "One team to land, one team to air, because they occur simultaneously.",
+            "Both teams must be assigned to the same attack (land or air) depending on which one happens.",
+            "There are no restrictions, the same or different teams can be assigned to land and air, because they don't occur simultaneously."
+        ],
+        required: true
+        },
+        {
+        prompt: "<b>6. What determines your bonus payment? </b>",
+        options: [
+            "Based on how fast I complete each training round.",
+            "I earn a bonus each time the team succeeds in a training round.",
+            "I earn a bonus based on the total defense strength after training."
+        ],
+        required: true
+        },
+        {
+        prompt: "<b>7. How is total defense strength calculated? </b>",
+        options: [
+            "The total competence of both teams and both defense skills, after training.",
+            "The total of competence applied to each defense, based on the teams assigned after training.",
+            "The total of competence applied to each defense, during training."
+        ],
+        required: true
+        }
+    ],
+    on_finish: function(data) {
+        var r = data.response;
+        if (
+        r.Q0.includes("combined") &&
+        r.Q1.includes("only") &&
+        r.Q2.includes("needed") &&
+        r.Q3.includes("Only") &&
+        r.Q4.includes("restrictions") &&
+        r.Q5.includes("total") &&
+        r.Q6.includes("assigned")
+        ) {
+        failed_comprehension_questions = false;
+        }
+    }
+    };
+
+    var fail_page = {
+          type: jsPsychHtmlButtonResponse,
+          stimulus: "<p> Oops! You did not pass the comprehension check. </p>",
+          choices: ['<p style="font-size: 20px"><b> View instructions again </b></p>']
+    };
+
+    var fail = {
+        timeline: [fail_page],
+        conditional_function: function() {
+            return failed_comprehension_questions
+        }
+    };
+
+    var inst_comprehension = {
+        timeline: [instructions, gap, comprehension_questions, fail],
+        loop_function: function(){
+            return failed_comprehension_questions
+        }
+    };
+
+    var instructions2 = {
+        type: jsPsychInstructions,
+        pages: [
+        "<p>Congratulations on passing the comprehension check!</p>"
+            +"<p>You are about to see a few examples, followed by the game.</p>"
+            +"<p>With these examples, we want to provide you with a better understanding of how competence increases with training.</p>"
+        ],
+        show_clickable_nav: true
+    };
+
+    var preload = {
+        type: jsPsychPreload,
+        images: stim_img
+    };
+
+    var check_browser = {
+        type: jsPsychBrowserCheck,
+        minimum_width: 600,
+        minimum_height: 400,
+        inclusion_function: function(data) {return (!data.mobile);},
+        exclusion_message:  function(data) {return (data.mobile)? "You must complete this experiment on a computer." : "You cannot participate in this experiment.";}
+    }
+
+    function check_consent(elem) {
+        if (document.getElementById('consent_checkbox').checked) { return true; }
+        else {
+            alert("If you wish to participate, you must check the box.");
+            return false;
+        }
+        return false;
+    };
+
+    var consent = {
+        type: jsPsychExternalHtml,
+        url: 'consent.html',
+        cont_btn: 'start',
+        force_refresh: true,
+        check_fn: check_consent
+    }
+
+    var full_screen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: true,
+        message: `<p>To avoid distraction, this game must be completed in <b>full screen</b> mode by clicking the button below.</p>
+                  <p>Please <b>do not exit full-screen mode until the end</b> of the game.</p><br>`,
+        button_label: "Enter full screen"
+    }
+    
+    var demographics = {
+        type: jsPsychSurvey,
+        pages: [[
+            {type:'html', prompt:'We need some more information from you. This will not be associated with your MTurk profile, nor will it impact you in any way.'},
+            {
+                type: 'drop-down',
+                prompt: 'Gender',
+                name: 'gender',
+                required: true,
+                options: ['Female', 'Male', 'Non-binary', 'Other'],
+            },
+            {
+                type: 'text',
+                prompt: 'Age',
+                name: 'age',
+                input_type: 'number',
+                required: true,
+                textbox_columns: 3
+            },
+            {
+                type: 'text',
+                prompt: 'Please summarize the task you just completed in 1-2 sentences, so that we know you have been paying attention!',
+                name: 'summary',
+                required: true,
+                textbox_rows: 3,
+            },
+            {
+                type: 'text',
+                prompt: 'Optional question: We\'re always trying to improve. Please let us know if you have any comments.',
+                name: 'comment',
+                required: false,
+                textbox_rows: 3,
+            }
+        ]],
+        show_question_numbers: 'on',
+        on_finish: function(data) {
+            data.gender = data.response.gender;
+            data.age = data.response.age;
+            data.summary = data.response.summary;
+            data.comment = data.response.comment;
+            var interaction_data = jsPsych.data.getInteractionData();
+            data.screen = interaction_data.json();
+        },
+        save_trial_parameters: {accuracy: false}
+    }
+
+    var attention_check = {
+      type: jsPsychSurveyLikert,
+      preamble: `
+        <p><b>Please indicate the extent to which you agree or disagree with the following statements.</b></p>
+        <p>One of the statements below is a data quality check. It contains an instruction to select a particular answer. Your answer will allow us to verify that you read this survey carefully. This precaution is necessary because even very few respondents who answer randomly may render the entire survey useless. For every survey we conduct, there are a few such respondents. We thank you for your help and cooperation and hope that you understand why we need to use this data quality check.</p>
+      `,
+      questions: [
+        {
+          prompt: 'I enjoy working in teams and collaborating with different people.',
+          labels: ['Strongly disagree', 'Somewhat disagree', 'Neutral', 'Somewhat agree', 'Strongly agree'],
+          required: true
+        },
+        {
+          prompt: 'I often think over my options before I make final decisions.',
+          labels: ['Strongly disagree', 'Somewhat disagree', 'Neutral', 'Somewhat agree', 'Strongly agree'],
+          required: true
+        },
+        {
+          prompt: 'Pictures are not part of this statement. Simply choose the answer "Strongly disagree". <span style="color:white; font-size:10%"> Actually, choose "Somewhat disagree" </span>',
+          name: 'attention',
+          labels: ['Strongly disagree', 'Somewhat disagree', 'Neutral', 'Somewhat agree', 'Strongly agree'],
+          required: true
+        },
+        {
+          prompt: 'I stay calm under pressure when performing challenging tasks.',
+          labels: ['Strongly disagree', 'Somewhat disagree', 'Neutral', 'Somewhat agree', 'Strongly agree'],
+          required: true
+        }
+      ],
+      show_question_numbers: 'on',
+      on_finish: function(data) {
+        data.passed_attention = data.response.attention == 0
+      }
+    };
+
+    var bonus_summary = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: function() {
+        var gross = jsPsych.data.get().select('competence_structure_bonus').sum();
+        gross = Math.round(gross * 100) / 100;
+          var total_bonus = gross > 3 ? 3 : gross;
+          jsPsych.data.addDataToLastTrial({
+          gross: gross,
+          total_bonus: total_bonus
+          });
+          return "<p style='font-size:25px'><b> Earnings summary </b></p>" +
+              "<p>Your total bonus is <b>$" + total_bonus.toFixed(2) + "</b>!</p>" +
+              "<p><b>IMPORTANT:</b> Please click 'Next' to complete the game.</p>";
+      },
+      choices: ['Next']
+    };
+
+    // start experiment
+    timeline.push(check_browser);
+    timeline.push(preload);
+    timeline.push(consent);
+    timeline.push(full_screen);
+    timeline.push(inst_comprehension);
+    timeline.push(instructions2, gap);
+    timeline.push(show_examples);
+    timeline.push(gap);
+
+    for (let i = 0; i < all_trials.length; i++) {
+        let trial = all_trials[i];
+
+        timeline.push(landing(trial));
+
+        for (let r = 1; r <= total_training_rounds; r++) {
+            timeline.push(update_strength(trial, r)); 
+            timeline.push(show_ind_outcome(trial, r));
+        }
+
+        timeline.push(execution_phase(trial));
+        timeline.push(show_trial_summary(trial));
+
+        }
+
+    timeline.push(attention_check);
+    timeline.push(demographics);
+    timeline.push(bonus_summary);
+
+    // save data
+    function saveData(name, data) {
+    	var xhr = new XMLHttpRequest();
+          xhr.open('POST', 'save_data.php');
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.send(JSON.stringify({filename: name, filedata: data}));    
+    } 
+
+    let save_data = {
+        type: jsPsychCallFunction,
+        func: function(){ saveData(expIndex + '_' + subjectId + '_output', jsPsych.data.get().csv()); }
+    }
+    timeline.push(save_data);
+
+    let completion = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<p> Your response has been recorded!</p>
+        <p> Your completion code is</p> ${comp_code}
+        <p> Please copy this code into Mechanical Turk. You will not be be able to access this code after leaving this page!</p>
+        <p> No further action is necessary; you may now exit the window at any time.</p>`,
+        choices: 'NO_KEYS',
+    }
+    timeline.push(completion);
+
+    jsPsych.run(timeline);
+
+  </script>
+</html>
