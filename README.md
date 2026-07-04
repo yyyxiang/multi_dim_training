@@ -1,6 +1,6 @@
 # Training collaborators for effective division of labor
 
-Data, code, and materials for: Tian, F., Gershman, S. J., & Xiang, Y. (2025). _Training collaborators for effective division of labor._
+Data, code, and materials for: Tian, F., Gershman, S. J., & Xiang, Y. (in press). Training collaborators for effective division of labor. _Cognitive Science._
 
 ## Project Overview
 
